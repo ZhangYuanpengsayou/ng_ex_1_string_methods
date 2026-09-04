@@ -5,17 +5,43 @@ encoded = """
    [6::GZ_7_VS::ok] | [99::IGNORE_ME::bad] | %%noise%%
 """
 
-###############################################################
-"""
-1. Part of the real message is inside the the '[' and ']' brackets.
-2. Each fragment inside the brackets has a number, jumbled text of the message, and 'ok'. Focus on only those fragments. The '::' are just separating these parts in the fragment 
-3. To find the actual message in every fragment,take every letter in the jumbled message, and shift it backward by the number part in that fragment
-For example, if the number is 3 and the jumbled message is ABC, then the actual message is XYZ.
-Similarly, if the number is 5 and the jumbled message is ABC, then the actual message is VWX.
-4. Ignore any fragment that has 'bad' instead of 'ok'.
-5. Once you have decoded all the fragments, combine them in the order of their numbers to get the final message. First comes the fragment with number 1, then 2, and so on.
-"""
-
 alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+decoded_parts = []
 
+for fragment in encoded.split("|"):
+    fragment = fragment.strip()
 
+    if fragment.startswith("[") and fragment.endswith("]"):
+        fragment = fragment[1:-1]
+        parts = fragment.split("::")
+
+        if len(parts) == 3:
+            number_text = parts[0]
+            jumbled_text = parts[1]
+            status = parts[2]
+
+            if number_text.isdigit() and status == "ok":
+                number = int(number_text)
+                decoded_text = ""
+
+                for character in jumbled_text:
+                    if character in alphabet:
+                        old_position = alphabet.find(character)
+                        new_position = (old_position - number) % len(alphabet)
+                        decoded_text = decoded_text + alphabet[new_position]
+                    elif character == "_":
+                        decoded_text = decoded_text + " "
+                    else:
+                        decoded_text = decoded_text + character
+
+                decoded_parts.append((number, decoded_text))
+
+decoded_parts.sort()
+message_parts = []
+
+for part in decoded_parts:
+    message_parts.append(part[1])
+
+final_message = " ".join(message_parts)
+
+print(final_message)
